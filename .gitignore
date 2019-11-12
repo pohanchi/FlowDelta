@@ -102,3 +102,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+*_data/*
+*/glove/*
+*/runs/*
+*/*_data/*
+*/output*/*
+*/CoQA/*
