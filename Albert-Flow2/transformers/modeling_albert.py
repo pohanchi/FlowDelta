@@ -1414,15 +1414,15 @@ class QAQFirst(nn.Module):
             k_vec=self.k_linear(x)
             for i in range(x.size(0)):
                 if i !=0:
-                    for j in range(i):
+                    for j in range(i+1):
                         confidence[j] = torch.sum(q_vec[i].mul(k_vec[j]),dim=1) / torch.sqrt(torch.tensor(128.0))
-                    alpha=self.softmax(confidence[:i].flatten())
-                    alpha=alpha.view(confidence[:i].size(0),-1)
-                    for j in range(i):
+                    alpha=self.softmax(confidence[:i+1].flatten())
+                    alpha=alpha.view(confidence[:i+1].size(0),-1)
+                    for j in range(i+1):
                         new_x[i] += torch.matmul(alpha[j], x[i])
                     new_x[i] = self.layernorm(new_x[i])
                 else:
-                    continue
+                    continue0
             x = new_x    
         return new_x
 
