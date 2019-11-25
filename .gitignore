@@ -24,6 +24,11 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+Albert-Flow2/*/checkpoint*
+Albert-Flow2/*/f1*
+Albert-Flow2/wandb/*
+Albert-Flow2/wandb/QuAC_data/*
+
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

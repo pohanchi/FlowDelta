@@ -1,0 +1,69 @@
+TrainingArguments:
+  ########################################################
+  ###                                                  ###
+  ###          Training configuration and path         ###
+  ###                                                  ###
+  ########################################################
+  train_file: QuAC_data/train.json
+  predict_file: QuAC_data/dev.json
+  model_type: albert
+  output_dir: output_1123_try_8epoch
+  config_pretrain: config/albert_config2.json
+  model_dict_pretrain: pytorch_model_state_dict/pytorch_albert_base2
+  null_score_diff_threshold: 0.0 #default float
+  max_seq_length: 384 
+  doc_stride: 128
+  max_query_length: 64
+  do_train: true
+  do_eval: true
+  evaluate_during_training: true
+  do_lower_case: true
+  per_gpu_train_batch_size:  1
+  per_gpu_eval_batch_size: 1
+  learning_rate: 0.00001
+  gradient_accumulation_steps: 48
+  weight_decay: 0.1
+  adam_epsilon: 0.000000000001
+  max_grad_norm: 1.0
+  num_train_epochs: 8
+  max_steps: -1
+  warmup_steps: 1000
+  n_best_size: 20
+  max_answer_length: 30 
+  verbose_logging: false
+  logging_steps: 500
+  save_steps: 500
+  eval_all_checkpoints: false
+  overwrite_output_dir: false
+  overwrite_cache: false
+  seed: 42
+  local_rank: -1
+  fp16: true
+  fp16_opt_level: O1
+  output_file: f1_scores.txt
+  overwrite_output_dir: true
+
+ModelConfig:
+  ########################################################
+  ###   You can put albert large/base/xlarge config    ###
+  ###   to this scopes and that can setup your model.  ###
+  ########################################################
+  attention_probs_dropout_prob: 0.0
+  hidden_act: gelu
+  hidden_dropout_prob: 0.0
+  embedding_size: 128
+  hidden_size: 768
+  initializer_range: 0.02
+  intermediate_size: 3072
+  max_position_embeddings: 512
+  num_attention_heads: 12
+  num_hidden_layers: 12
+  num_hidden_groups: 1
+  net_structure_type: 0
+  gap_size: 0
+  num_memory_blocks: 0
+  inner_group_num: 1
+  down_scale_factor: 1
+  type_vocab_size: 2
+  vocab_size: 30000
+  output_hidden_states: true
