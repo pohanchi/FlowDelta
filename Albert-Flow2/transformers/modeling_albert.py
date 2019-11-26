@@ -1421,8 +1421,8 @@ class QAQFirst(nn.Module):
                         new_x[i] += torch.matmul(alpha[j], x[i])
                     new_x[i] = self.layernorm(new_x[i])
                 else:
-                    continue0
-            x = new_x    
+                    continue
+            # x = new_x    
         return new_x
 
 
