@@ -1375,19 +1375,49 @@ class QAQAttent(nn.Module):
             k_vec=self.k_linear(x)
             for i in range(x.size(0)):
                 if i !=0:
-                    for j in range(i):
+                    for j in range(i+1):
                         #print("torch.sum size: ",torch.sum(q_vec[i].mul(k_vec[j]),dim=1).size())
                         confidence[j] = torch.sum(q_vec[i].mul(k_vec[j]),dim=1) / torch.sqrt(torch.tensor(128.0))
-                    alpha=self.softmax(confidence[:i].flatten())
-                    alpha=alpha.view(confidence[:i].size(0),-1)
-                    for j in range(i):
-                        #print("weighted sum size: ",torch.matmul(alpha[j],x[i]).size())
-                        new_x[i] += torch.matmul(alpha[j], x[i])
-                    #new_x[i] = self.layernorm(new_x[i])
+                    alpha=self.softmax(confidence[:i+1].flatten())
+                    alpha=alpha.view(confidence[:i+1].size(0),-1)
+                    for j in range(i+1):
+                        scaler = alpha[j].expand(768,384).transpose(0,1)
+                        new_x[i] += scaler*x[j]
+                        # new_x[i] += torch.matmul(alpha[j],x[j])
                 else:
-                    continue
-            x = new_x    
-        return x
+                    continue    
+        return new_x
+
+
+class QAQAttentAdjust(nn.Module):
+    '''
+    QAQmoduleAttention(on the finally for C2C attention(Question Turn Attention). 
+    '''
+    def __init__(self,config,
+                 hidden_size, 
+                 num_layers):
+        super(QAQAttentAdjust, self).__init__()
+        self.num_layers = num_layers
+        self.config = config
+        self.hidden_size = hidden_size
+        self.q_linear = nn.Linear(self.hidden_size,128)
+        self.k_linear = nn.Linear(self.hidden_size,128)
+        self.softmax=torch.nn.Softmax()
+        self.layernorm = ALBertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+    def forward(self,x):
+        for _ in range(self.num_layers):
+            new_x = torch.zeros((x.size())).float().cuda().half()                                # (qa_pairs, context_length, hidden_embeddings)
+            confidence = torch.zeros((x.size(0),384)).fill_(float("-Inf")).float().cuda().half() # (qa_pairs, context length)
+            q_vec=self.q_linear(x)
+            k_vec=self.k_linear(x)
+            for i in range(x.size(0)):
+                if i !=0:
+                    confidence[i] = torch.sum(q_vec[i].mul(k_vec[0]),dim=1) / torch.sqrt(torch.tensor(128.0))
+                    alpha=self.softmax(confidence[i+1])
+                    new_x[i] += torch.matmul(alpha[j], x[j])
+                else:
+                    continue    
+        return new_x
     
 class QAQFirst(nn.Module):
     '''
@@ -1420,7 +1450,7 @@ class QAQFirst(nn.Module):
                     alpha=alpha.view(confidence[:i+1].size(0),-1)
                     for j in range(i+1):
                         new_x[i] += torch.matmul(alpha[j], x[i])
-                    new_x[i] = self.layernorm(new_x[i])
+                    # new_x[i] = self.layernorm(new_x[i])
                 else:
                     continue
             # x = new_x    
