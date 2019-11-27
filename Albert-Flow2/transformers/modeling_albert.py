@@ -1232,7 +1232,7 @@ class ALBertForQuestionAnswering(ALBertPreTrainedModel):
                 class_loss_fct = CrossEntropyLoss(ignore_index=3)
                 class_loss = class_loss_fct(class_logits, is_impossible)
                 total_loss = (start_loss + end_loss + class_loss) / 3
-            return total_losse
+            return total_loss
         else:
             return start_logits, end_logits, class_logits
 
@@ -1383,8 +1383,9 @@ class QAQAttent(nn.Module):
                         scaler = alpha[j].expand(768,384).transpose(0,1)
                         new_x[i] += scaler*x[j]
                         # new_x[i] += torch.matmul(alpha[j],x[j])
+                    # fuck should divided by number of  questions here??
                 else:
-                    continue    
+                    new_x[i] = x[i]
         return new_x
 
 
