@@ -114,3 +114,4 @@ venv.bak/
 */*_data/*
 */output*/*
 */CoQA/*
+*/output*
