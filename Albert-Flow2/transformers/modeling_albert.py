@@ -1232,7 +1232,7 @@ class ALBertForQuestionAnswering(ALBertPreTrainedModel):
                 class_loss_fct = CrossEntropyLoss(ignore_index=3)
                 class_loss = class_loss_fct(class_logits, is_impossible)
                 total_loss = (start_loss + end_loss + class_loss) / 3
-            return total_loss
+            return total_losse
         else:
             return start_logits, end_logits, class_logits
 
@@ -1376,7 +1376,6 @@ class QAQAttent(nn.Module):
             for i in range(x.size(0)):
                 if i !=0:
                     for j in range(i+1):
-                        #print("torch.sum size: ",torch.sum(q_vec[i].mul(k_vec[j]),dim=1).size())
                         confidence[j] = torch.sum(q_vec[i].mul(k_vec[j]),dim=1) / torch.sqrt(torch.tensor(128.0))
                     alpha=self.softmax(confidence[:i+1].flatten())
                     alpha=alpha.view(confidence[:i+1].size(0),-1)
