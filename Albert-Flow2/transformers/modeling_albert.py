@@ -1171,9 +1171,7 @@ class ALBertForQuestionAnswering(ALBertPreTrainedModel):
         self.class_num = class_num 
         self.use_flow = use_flow
         if self.use_flow:
-            self.flow = QAQAttent(config,config.hidden_size, num_layers=1)
-            self.pool = nn.Linear(config.hidden_size * 2, config.hidden_size * 2)
-            self.tanh = nn.Tanh()
+            self.flow = QAQAttentAdjust(config,config.hidden_size, num_layers=1)
 
         hidden_out_size = config.hidden_size   if self.use_flow else config.hidden_size
         self.qa_outputs = nn.Linear(hidden_out_size, 2)
@@ -1235,6 +1233,8 @@ class ALBertForQuestionAnswering(ALBertPreTrainedModel):
             return total_loss
         else:
             return start_logits, end_logits, class_logits
+
+
 
 # class FlowRNN(nn.Module):
 #     '''
@@ -1388,7 +1388,6 @@ class QAQAttent(nn.Module):
                     new_x[i] = x[i]
         return new_x
 
-
 class QAQAttentAdjust(nn.Module):
     '''
     QAQmoduleAttention(on the finally for C2C attention(Question Turn Attention). 
@@ -1411,50 +1410,17 @@ class QAQAttentAdjust(nn.Module):
             q_vec=self.q_linear(x)
             k_vec=self.k_linear(x)
             for i in range(x.size(0)):
-                if i !=0:
-                    confidence[i] = torch.sum(q_vec[i].mul(k_vec[0]),dim=1) / torch.sqrt(torch.tensor(128.0))
-                    alpha=self.softmax(confidence[i+1])
-                    new_x[i] += torch.matmul(alpha[j], x[j])
-                else:
-                    continue    
+                for j in range(x.size(0)):
+                    confidence[j] = torch.sum(q_vec[i].mul(k_vec[j]),dim=1) / torch.sqrt(torch.tensor(128.0))
+                alpha=self.softmax(confidence[:].flatten())
+                alpha=alpha.view(confidence[:].size(0),-1)
+                for j in range(i+1):
+                    scaler = alpha[j].expand(768,384).transpose(0,1)
+                    new_x[i] += scaler*x[j]
         return new_x
-    
-class QAQFirst(nn.Module):
-    '''
-    QAQmoduleAttention(on the finally for C2C attention(Question Turn Attention). 
-    '''
-    def __init__(self,config,
-                 hidden_size, 
-                 num_layers):
-        super(QAQAttent, self).__init__()
-        self.num_layers = num_layers
-        self.config = config
-        self.hidden_size = hidden_size
-        self.q_linear = nn.Linear(self.hidden_size,128)
-        self.k_linear = nn.Linear(self.hidden_size,128)
-        self.softmax=torch.nn.Softmax()
-        self.layernorm = ALBertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-    
-    def forward(self,x):
-        
-        for _ in range(self.num_layers):
-            new_x = torch.zeros((x.size())).float().cuda().half()
-            confidence = torch.zeros((x.size(0),384)).fill_(float("-Inf")).float().cuda().half()
-            q_vec=self.q_linear(x)
-            k_vec=self.k_linear(x)
-            for i in range(x.size(0)):
-                if i !=0:
-                    for j in range(i+1):
-                        confidence[j] = torch.sum(q_vec[i].mul(k_vec[j]),dim=1) / torch.sqrt(torch.tensor(128.0))
-                    alpha=self.softmax(confidence[:i+1].flatten())
-                    alpha=alpha.view(confidence[:i+1].size(0),-1)
-                    for j in range(i+1):
-                        new_x[i] += torch.matmul(alpha[j], x[i])
-                    # new_x[i] = self.layernorm(new_x[i])
-                else:
-                    continue
-            # x = new_x    
-        return new_x
+
+
+
 
 
 
