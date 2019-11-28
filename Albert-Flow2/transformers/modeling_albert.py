@@ -1188,7 +1188,7 @@ class ALBertForQuestionAnswering(ALBertPreTrainedModel):
         # sequence_output: (batch, seq_len, hidden_size)
         
         if self.use_flow:
-            flow_out = self.flow(sequence_output)
+            sequence_output = self.flow(sequence_output)
             # flow_in = sequence_output.permute(1, 0, 2)  # (seq_len, dialog_len, hidden_state)
             # flow_out, _ = self.flow(flow_in)
             # flow_out = flow_out.permute(1, 0, 2)
