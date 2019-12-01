@@ -158,6 +158,7 @@ def read_quac_examples(input_file, is_training, max_question_len=188):
                     question_text += '{}<q>{}<a>{}'.format(paragraph['qas'][qa_idx - 1]['question'],
                                                       paragraph['qas'][qa_idx - 1]['orig_answer']['text'],
                                                       qa['question'])
+                                                      
                 else:
                     question_text = qa["question"]
                 # print("question tokens: ",question_text)
