@@ -118,7 +118,7 @@ class InputFeatures(object):
         self.is_impossible = is_impossible
         self.dialog_id = dialog_id
 
-def read_quac_examples(input_file, is_training, max_question_len=60):
+def read_quac_examples(input_file, is_training, max_question_len=188):
     """Read a QuAC json file into a list of QuACExample."""
     with open(input_file, "r", encoding='utf-8') as reader:
         source = json.load(reader)
@@ -152,16 +152,22 @@ def read_quac_examples(input_file, is_training, max_question_len=60):
                 qas_id = qa["id"]
                 if qa_idx > 0:
                     # '{} {} / {}'
-                    question_text = '{}<q>{}<a>{}'.format(paragraph['qas'][qa_idx - 1]['question'],
+                    if qa_idx >1:
+                        question_text = '{}<a>{}<q>'.format(paragraph['qas'][0]['orig_answer']['text'],paragraph['qas'][0]['question'])
+
+                    question_text += '{}<q>{}<a>{}'.format(paragraph['qas'][qa_idx - 1]['question'],
                                                       paragraph['qas'][qa_idx - 1]['orig_answer']['text'],
                                                       qa['question'])
                 else:
                     question_text = qa["question"]
-
+                # print("question tokens: ",question_text)
                 q_tokens = question_text.split()
+                # print("q_tokens = ",q_tokens)
+                # print("q_tokens length: ",len(q_tokens))
                 if len(q_tokens) > max_question_len:
                     logger.info('exceed max query before token')
                     question_text = ' '.join(q_tokens[-max_question_len:])
+                    
                 else:
                     for _ in range(max_question_len - len(q_tokens)):
                         question_text = question_text + ' _'
@@ -1200,7 +1206,7 @@ def main():
 
     if args.do_train:
         cached_train_features_file = args.train_file+'_{0}_{1}_{2}_{3}'.format(
-            args.bert_model, str(args.max_seq_length), str(args.doc_stride), str(args.max_query_length))
+        str("albert_model"), str(args['max_seq_length']), str(args['doc_stride']), str(args['max_query_length']))
         train_features = None
         try:
             with open(cached_train_features_file, "rb") as reader:
