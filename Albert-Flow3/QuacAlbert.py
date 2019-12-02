@@ -181,7 +181,7 @@ def train(args, train_dataloader, model, tokenizer,summary):
                     # Log metrics
                     if args['local_rank'] == -1 and args['evaluate_during_training']:  # Only evaluate when single GPU otherwise metrics may not average well
                         score = evaluate(args, model, tokenizer,target_dict)
-                        tr_loss/=args['logging_steps']s
+                        tr_loss/=args['logging_steps']
                         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
                         tr_loss = 0
                         # wandb.log({'training_loss':tr_loss},step=global_step)
