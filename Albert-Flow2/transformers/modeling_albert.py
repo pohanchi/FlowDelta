@@ -31,7 +31,8 @@ import pdb
 from .modeling_utils import PreTrainedModel, prune_linear_layer
 from .configuration_albert import ALBertConfig
 from .file_utils import add_start_docstrings
-# import pdb
+from .sharnn import Block
+import pdb
 logger = logging.getLogger(__name__)
 
 BERT_PRETRAINED_MODEL_ARCHIVE_MAP = {
@@ -1367,6 +1368,7 @@ class QAQAttent(nn.Module):
         self.k_linear = nn.Linear(self.hidden_size,128)
         self.softmax=torch.nn.Softmax()
         self.layernorm = ALBertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+
     def forward(self,x):
         for _ in range(self.num_layers):
             new_x = torch.zeros((x.size())).float().cuda().half()                                # (qa_pairs, context_length, hidden_embeddings)
@@ -1431,6 +1433,26 @@ class QAQAttentAdjust(nn.Module):
                  hidden_size, 
                  num_layers):
         super(QAQAttentAdjust, self).__init__()
+        self.sharnn = Block(hidden_size, hidden_size).cuda()
+
+    def forward(self,x):
+        # x.shape = [12, 384, 768]
+        # the same as new_x
+        num_of_q = x.shape[0]
+        tmp_mask = torch.full([num_of_q, num_of_q], -float('Inf'))
+        tmp_mask = torch.triu(tmp_mask, diagonal=1).cuda()
+        x = self.sharnn(x, tmp_mask)
+        
+        return x
+"""
+class QAQAttentAdjust(nn.Module):
+    '''
+    QAQmoduleAttention(on the finally for C2C attention(Question Turn Attention). 
+    '''
+    def __init__(self,config,
+                 hidden_size, 
+                 num_layers):
+        super(QAQAttentAdjust, self).__init__()
         self.num_layers = num_layers
         self.config = config
         self.hidden_size = hidden_size
@@ -1438,6 +1460,7 @@ class QAQAttentAdjust(nn.Module):
         self.k_linear = nn.Linear(self.hidden_size,128)
         self.softmax=torch.nn.Softmax()
     def forward(self,x):
+        pdb.set_trace()
         for _ in range(self.num_layers):
             new_x = torch.zeros((x.size())).float().cuda().half()                                # (qa_pairs, context_length, hidden_embeddings)
             confidence = torch.zeros((x.size(0),384)).fill_(float("-Inf")).float().cuda().half() # (qa_pairs, context length)
@@ -1452,8 +1475,7 @@ class QAQAttentAdjust(nn.Module):
                     scaler = alpha[j].expand(768,384).transpose(0,1)
                     new_x[i] += scaler*x[j]
         return new_x
-
-
+"""
 
 
 
